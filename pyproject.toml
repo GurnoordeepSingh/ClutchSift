@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clutchsift"
+version = "0.2.0"
+description = "Local-first gaming highlight candidate finder and vertical Shorts clipper"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "ClutchSift contributors"}]
+keywords = ["gaming", "shorts", "video-editing", "ffmpeg", "highlights", "captions"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+[project.optional-dependencies]
+captions = ["faster-whisper>=1.1,<3"]
+
+[project.scripts]
+clutchsift = "clutchsift.cli:main"
+
+[tool.setuptools]
+packages = ["clutchsift"]
