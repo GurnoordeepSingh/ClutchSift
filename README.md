@@ -1,4 +1,8 @@
-# 🎬 ClutchSift
+<p align="center">
+  <img src="assets/clutchsift-logo.png" alt="ClutchSift logo — editing corners framing a play button" width="160" height="160">
+</p>
+
+<h1 align="center">ClutchSift</h1>
 
 **Local-first gaming highlight candidate finder and Shorts clipper.**  Select a recording, review likely moments, trim them, and export vertical or landscape clips. No account, watermark, cloud upload, or paid API required for core editing.
 
