@@ -1,0 +1,45 @@
+{
+  "checkpoint": "base.pt",
+  "voice": "Microsoft Zira Desktop",
+  "whisper": "20250625",
+  "torch": "2.14.1+cpu",
+  "device": "cpu",
+  "threads": 4,
+  "model_load_seconds": 0.568,
+  "reference_words": 39,
+  "word_error_rate": 0.0,
+  "audio_seconds": 16.386,
+  "real_time_factor": 0.497,
+  "clips": [
+    {
+      "reference": "Wait for the jump. I landed on the roof. That was so close.",
+      "transcript": "Wait for the jump. I landed on the roof. That was so close.",
+      "audio_seconds": 5.664,
+      "decode_seconds": 5.376,
+      "reference_words": 13,
+      "word_edits": 0,
+      "timed_tokens": 13,
+      "timestamps_present_ordered_in_bounds": true
+    },
+    {
+      "reference": "My car is stuck under the bridge. Reverse slowly and then turn left.",
+      "transcript": "My car is stuck under the bridge. Reverse slowly and then turn left.",
+      "audio_seconds": 5.308,
+      "decode_seconds": 1.468,
+      "reference_words": 13,
+      "word_edits": 0,
+      "timed_tokens": 13,
+      "timestamps_present_ordered_in_bounds": true
+    },
+    {
+      "reference": "We have one checkpoint left. Grab the flag before the timer runs out.",
+      "transcript": "We have one checkpoint left. Grab the flag before the timer runs out.",
+      "audio_seconds": 5.414,
+      "decode_seconds": 1.299,
+      "reference_words": 13,
+      "word_edits": 0,
+      "timed_tokens": 13,
+      "timestamps_present_ordered_in_bounds": true
+    }
+  ]
+}

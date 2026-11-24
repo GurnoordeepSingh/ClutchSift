@@ -10,6 +10,8 @@ import shutil
 import statistics
 import subprocess
 import sys
+import tempfile
+from itertools import count
 
 SAMPLE_RATE = 4000
 WINDOW_SECONDS = 1
@@ -44,7 +46,8 @@ def find_tool(name: str) -> str:
 
 
 def run_command(args: list[str], *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    p = subprocess.run(args, capture_output=True, text=True, cwd=cwd, check=False)
+    p = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", cwd=cwd, check=False)
     if p.returncode:
         message = (p.stderr or p.stdout or "Unknown FFmpeg error").strip()
         raise ClutchSiftError(message[-1800:])
@@ -123,8 +126,9 @@ def evenly_spaced_candidates(duration: float, clip_seconds: float, limit: int) -
     output: list[Highlight] = []
     length = min(duration, clip_seconds)
     max_start = max(0.0, duration - length)
-    for i in range(min(limit, max(1, math.ceil(duration / length)))):
-        start = min(max_start, i * length)
+    slots = min(limit, max(1, math.ceil(duration / length)))
+    for i in range(slots):
+        start = max_start * i / (slots - 1) if slots > 1 else max_start / 2
         end = min(duration, start + length)
         output.append(Highlight(start, end, start + (end - start) / 2, 0, -120, "sampling"))
     return output
@@ -185,9 +189,21 @@ def find_highlights(video: Path | str, clip_seconds: float = 30, limit: int = 5)
 def validate_segment(start: float, end: float, duration: float) -> tuple[float, float]:
     if not all(math.isfinite(v) for v in (start, end, duration)):
         raise ClutchSiftError("Start/end must be finite numbers.")
-    if start < 0 or end <= start or end > duration + 0.05:
+    if start < 0 or start >= duration or end <= start or end > duration + 0.05:
         raise ClutchSiftError(f"Invalid clip range {start:.2f}–{end:.2f} for video length {duration:.2f}s.")
     return max(0, start), min(duration, end)
+
+
+def create_run_folder(parent: Path) -> Path:
+    """Reserve a separate directory for the manifest, clips and sidecars."""
+    parent.mkdir(parents=True, exist_ok=True)
+    for number in count(1):
+        folder = parent / f"run-{number:03}"
+        try:
+            folder.mkdir()
+        except FileExistsError:
+            continue
+        return folder
 
 
 def export_clip(
@@ -199,7 +215,7 @@ def export_clip(
     destination = Path(destination).resolve()
     total, _ = probe_media(video) if duration is None else (duration, None)
     start, end = validate_segment(start, end, total)
-    if destination == video:
+    if destination == video or (destination.exists() and destination.samefile(video)):
         raise ClutchSiftError("Refusing to overwrite the original recording.")
     if layout not in ("fit-blur", "center-crop"):
         raise ClutchSiftError("Layout must be fit-blur or center-crop.")
@@ -228,8 +244,11 @@ def export_clip(
                   if encoder == "nvenc" else ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"])
     args.extend(["-map", "0:a:0?", *video_args,
                  "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k",
-                 "-movflags", "+faststart", str(destination)])
-    run_command(args)
+                 "-movflags", "+faststart"])
+    with tempfile.TemporaryDirectory(dir=destination.parent) as tmp:
+        staged = Path(tmp) / destination.name
+        run_command([*args, str(staged)])
+        staged.replace(destination)
     return destination
 
 
@@ -265,17 +284,19 @@ def _srt_time(seconds: float) -> str:
 def burn_subtitles(clip: Path | str, srt: Path | str) -> Path:
     """Optional subtitle burn-in using FFmpeg's libass subtitles filter."""
     clip, srt = Path(clip).resolve(), Path(srt).resolve()
-    if clip.parent != srt.parent:
-        raise ClutchSiftError("SRT must be in the same directory as the clip.")
-    # Avoid FFmpeg's Windows drive-colon escaping by using the SRT basename and cwd.
-    if "'" in srt.name or ":" in srt.name or "\\" in srt.name:
-        raise ClutchSiftError("Unsupported caption filename.")
+    suffix = srt.suffix.lower()
+    if suffix not in (".srt", ".ass"):
+        raise ClutchSiftError("Choose an SRT or ASS subtitle file.")
     output = clip.with_name(clip.stem + "_captioned.mp4")
     args = [find_tool("ffmpeg"), "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
-            "-i", str(clip), "-vf", f"subtitles=filename='{srt.name}'",
+            "-i", str(clip), "-vf", f"subtitles=filename=captions{suffix}",
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
-            "-c:a", "copy", "-movflags", "+faststart", str(output)]
-    run_command(args, cwd=srt.parent)
+            "-c:a", "copy", "-movflags", "+faststart", "render.mp4"]
+    with tempfile.TemporaryDirectory(dir=output.parent) as tmp:
+        staging = Path(tmp)
+        shutil.copyfile(srt, staging / f"captions{suffix}")
+        run_command(args, cwd=staging)
+        (staging / "render.mp4").replace(output)
     return output
 
 

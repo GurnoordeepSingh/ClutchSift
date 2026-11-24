@@ -2,7 +2,7 @@
 
 **Local-first gaming highlight candidate finder and Shorts clipper.**  Select a recording, review likely moments, trim them, and export vertical or landscape clips. No account, watermark, cloud upload, or paid API required for core editing.
 
-[![CI](https://img.shields.io/badge/tests-12%20passing-brightgreen)](#tests) [![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](#quick-start-windows) [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[CI runs](https://github.com/GurnoordeepSingh/ClutchSift/actions/workflows/test.yml) · [Python 3.11+](#quick-start-windows) · [MIT license](LICENSE)
 
 > **Truthful capability note:** v0.2 uses **audio peaks and/or simple visual-motion changes**, not a trained GTA/Roblox kill detector. Motion, loud audio, and changes do not prove a clip is funny, exciting, or viral. This is a working prototype to validate real demand and collect permitted user feedback.
 
@@ -10,12 +10,12 @@
 
 | Capability | Availability |
 | --- | --- |
-| Local MP4/MKV/MOV/WebM/AVI input, preview and manual trim | ✅ GUI and CLI |
+| Local MP4/MKV/MOV/WebM/AVI input | GUI and CLI. Preview and manual trim are available in the GUI. |
 | Audio-activity proposals with transparent labels | ✅ |
 | Audio + 1 FPS visual-motion proposals, fallback to sampling | ✅ Heuristic, new |
 | 9:16 full-gameplay-in-blurred-background export | ✅ |
-| 9:16 center-crop and 16:9 exports | ✅ CLI |
-| NVIDIA NVENC accelerated encoding (when supported) | ✅ CLI, opt-in |
+| 9:16 center crop or original aspect ratio | GUI and CLI |
+| NVIDIA NVENC encoding on supported systems | GUI and CLI, opt-in |
 | Offline Whisper transcript, editable SRT | ✅ Optional package/model |
 | Word-timed karaoke-style ASS captions | ✅ Optional, new |
 | SRT/ASS burn-in | ✅ With suitable FFmpeg libass build |
@@ -110,7 +110,7 @@ Every candidate has a detector `method` in `highlights.json`: `audio`, `motion`,
 ### Safety and data handling
 
 - Source video is read, never rewritten as an export. A guard prevents accidentally exporting over the original.
-- Destination clips, `highlights.json`, and optional caption/metadata files are written to the chosen output folder. **Existing output files with the same names can be overwritten** by FFmpeg's `-y`; use a fresh export directory if you want to preserve earlier results.
+- Each scan or export creates a numbered folder inside the selected output folder, such as `run-001`. Open that folder for clips, `highlights.json`, captions and metadata. Repeating the export creates another folder. A failed render leaves any previously completed video intact.
 - Core analysis is offline. Optional model download uses the internet once. Optional Ollama communicates on localhost only. No telemetry, analytics, video upload, hidden posting, or API key.
 - Use only recordings you own or have the right to edit and distribute; game, music and voice rights may apply. Don't infer privacy permissions from public availability.
 
@@ -120,11 +120,14 @@ Every candidate has a detector `method` in `highlights.json`: `audio`, `motion`,
 py -3 -m unittest discover -s tests -v
 ```
 
-14 tests pass locally with FFmpeg, covering normal audio and hybrid selection, caption formatting, metadata validation, path safety, and actual 9:16 export. CI also runs Python tests; FFmpeg tests skip when no FFmpeg exists. **The optional heavyweight ASR/Ollama stacks and the native Windows Tkinter GUI have not yet been end-to-end tested on your machine.**
+CI runs the test suite and decodes generated vertical clips on Windows and Ubuntu. The Windows suite also exercises the desktop controls with generated footage. To check your own NVIDIA encoder, run `python benchmarks/media_check.py --nvenc` from the repository root.
+
+See [laptop benchmark results](benchmarks/README.md) for model timings and their limits.
 
 ## Development and research
 
 - [AI model decision matrix](docs/MODEL_RESEARCH.md)
+- [Model choices and upstream license terms](docs/MODELS_AND_LICENSES.md)
 - [How Shorts metrics inform the clipper](docs/SHORTS_RESEARCH.md)
 - [Architecture, acceptance tests, milestones](docs/ARCHITECTURE.md)
 - [Competitive inspiration and licensing notes](docs/OPEN_SOURCE_RESEARCH.md)

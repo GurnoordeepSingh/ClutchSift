@@ -11,7 +11,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from .core import (
     ClutchSiftError, Highlight, burn_subtitles, export_clip, find_highlights,
-    pretty_time, probe_media, validate_segment, write_manifest,
+    pretty_time, create_run_folder, validate_segment, write_manifest,
 )
 from .hybrid import find_hybrid_highlights
 
@@ -36,6 +36,8 @@ class ClutchSiftApp:
         self.num = tk.StringVar(value="5")
         self.length = tk.StringVar(value="30")
         self.vertical = tk.BooleanVar(value=True)
+        self.layout = tk.StringVar(value="fit-blur")
+        self.encoder = tk.StringVar(value="cpu")
         self.captions = tk.BooleanVar(value=False)
         self.burn = tk.BooleanVar(value=False)
         self.hybrid = tk.BooleanVar(value=True)
@@ -124,9 +126,16 @@ class ClutchSiftApp:
         tk.Checkbutton(output, text="Hybrid scan (audio peaks + visual motion)", variable=self.hybrid,
                        bg=PANEL, fg=FG, selectcolor=PANEL, activebackground=PANEL,
                        activeforeground=FG, font=("Segoe UI", 10)).pack(anchor="w")
-        tk.Checkbutton(output, text="Vertical 9:16 (blurred background)", variable=self.vertical,
+        format_row = tk.Frame(output, bg=PANEL)
+        format_row.pack(fill="x")
+        tk.Checkbutton(format_row, text="Vertical 9:16", variable=self.vertical,
                        bg=PANEL, fg=FG, selectcolor=PANEL, activebackground=PANEL,
-                       activeforeground=FG, font=("Segoe UI", 10)).pack(anchor="w")
+                       activeforeground=FG, font=("Segoe UI", 10)).pack(side="left")
+        ttk.Combobox(format_row, textvariable=self.layout, values=("fit-blur", "center-crop"),
+                     state="readonly", width=13).pack(side="left", padx=6)
+        self._label(format_row, "Encoder", bg=PANEL).pack(side="left", padx=(16, 4))
+        ttk.Combobox(format_row, textvariable=self.encoder, values=("cpu", "nvenc"),
+                     state="readonly", width=7).pack(side="left")
         tk.Checkbutton(output, text="Generate captions (requires optional faster-whisper)", variable=self.captions,
                        bg=PANEL, fg=FG, selectcolor=PANEL, activebackground=PANEL,
                        activeforeground=FG, font=("Segoe UI", 10)).pack(anchor="w")
@@ -292,15 +301,18 @@ class ClutchSiftApp:
         snapshots = [self.highlights[i] for i in chosen]
         vertical, captions, burn = self.vertical.get(), self.captions.get(), self.burn.get()
         karaoke, titles = self.karaoke.get(), self.titles.get()
+        layout, encoder = self.layout.get(), self.encoder.get()
         if burn and not captions:
             messagebox.showerror("Captions", "Enable 'Generate captions' before burning them in.")
             return
 
         def worker():
+            run_folder = create_run_folder(target)
             result = []
             for i, candidate in enumerate(snapshots, 1):
-                dest = target / f"clip_{i:02}.mp4"
-                export_clip(video, dest, candidate.start, candidate.end, vertical=vertical, duration=duration)
+                dest = run_folder / f"clip_{i:02}.mp4"
+                export_clip(video, dest, candidate.start, candidate.end, vertical=vertical,
+                            duration=duration, layout=layout, encoder=encoder)
                 if captions or titles:
                     from .captions import write_captions
                     subtitle, text = write_captions(dest, style="karaoke" if karaoke else "srt")
@@ -310,7 +322,7 @@ class ClutchSiftApp:
                     result.append(burn_subtitles(dest, subtitle) if burn else dest)
                 else:
                     result.append(dest)
-            write_manifest(video, snapshots, target)
+            write_manifest(video, snapshots, run_folder)
             return result
 
         self._run_background(worker, self._exported, f"Exporting {len(snapshots)} clip(s). Keep this window open.")
