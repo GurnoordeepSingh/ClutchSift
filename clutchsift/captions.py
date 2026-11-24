@@ -21,8 +21,8 @@ def _load_model(model_name: str, device: str):
 
 def transcribe_clip(clip: Path | str, model_name: str = "small", device: str = "cpu") -> list[dict]:
     """Return word-aligned text segments and timestamps; model cached per process."""
-    model = _load_model(model_name, device)
     try:
+        model = _load_model(model_name, device)
         segments, _ = model.transcribe(str(Path(clip).resolve()), vad_filter=True,
                                        word_timestamps=True, beam_size=3,
                                        condition_on_previous_text=False)
@@ -39,6 +39,8 @@ def transcribe_clip(clip: Path | str, model_name: str = "small", device: str = "
                 result.append({"start": float(s.start), "end": float(s.end),
                                "text": text, "words": words})
         return result
+    except ClutchSiftError:
+        raise
     except Exception as exc:
         raise ClutchSiftError("Speech recognition failed. Try CPU mode or smaller model: " + str(exc)) from exc
 

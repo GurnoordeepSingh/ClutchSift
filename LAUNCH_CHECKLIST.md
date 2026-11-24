@@ -12,23 +12,11 @@
 - [ ] Create your own demo and screenshots, with permission for any game footage
 - [ ] Ask 5 creators to test; record how many suggestions are actually usable
 
-## Publish as a GitHub repository
+## Review and release
 
-1. Create a new GitHub repository (e.g. `clutchsift`). Do not initialize with a different license/README because these are already included.
-2. From this folder in PowerShell or terminal:
+The public repository is [GurnoordeepSingh/ClutchSift](https://github.com/GurnoordeepSingh/ClutchSift). Review the [recovered baseline](https://github.com/GurnoordeepSingh/ClutchSift/pull/1) first. The [export and desktop changes](https://github.com/GurnoordeepSingh/ClutchSift/pull/2) are stacked on that baseline. After the baseline lands, target the follow-up at main and check CI on the new base.
 
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial open-source local gaming clipper MVP"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-   git push -u origin main
-   ```
-
-3. Replace YOUR_USERNAME and YOUR_REPO with your actual repository. Sign into GitHub using your normal authenticated Git setup or Git Credential Manager. This archive has **not** been pushed for you.
-4. Add a short demo recording (with rights), tags, and clear limitations in README.
-5. Publish a v0.1.0 release only after verifying it works on a separate Windows install. A ZIP of Python code is not a Windows `.exe` installer.
+For a tagged release, check a fresh Windows installation and publish a demo using footage cleared for distribution.
 
 ## First creator outreach message
 
@@ -36,12 +24,11 @@
 
 Avoid promises like “automatically finds viral kills” until gameplay-aware detection is validated.
 
-## v0.2 publish gate
+## Current validation
 
-- [x] 12 automated tests pass on development machine with FFmpeg.
-- [x] Reusable research docs, architecture, business hypothesis, CI and contributor/security guides.
-- [ ] Run on the actual Windows RTX 5060 laptop, verify Tkinter GUI and NVIDIA NVENC.
-- [ ] Validate optional faster-whisper/Ollama download/runtime and styled captions end-to-end on Windows.
-- [ ] Get 5 users' own consented recordings and record precision@5 and time saved.
-- [ ] Create the *correct* GitHub repository; do not mix with unrelated File-sorter.
-- [ ] Push the GitHub-ready source and screenshots/demo only after user-approved repository exists.
+- [x] Recovered archive passed all 14 original tests on Windows.
+- [x] Updated suite passed 19 tests on the RTX 5060 laptop, including desktop scan, trim, export and subtitle burn-in.
+- [x] Verified actual hardware encoding and decoding of the resulting MP4.
+- [x] Published the source and follow-up as review branches.
+- [ ] Check large-v3-turbo transcription and multimodal frame review on a creator recording.
+- [ ] Measure accepted distinct candidates and editing time on five creators' own recordings.

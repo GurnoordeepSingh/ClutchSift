@@ -1,0 +1,29 @@
+name: Caption integration
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/captions.yml'
+      - 'clutchsift/captions.py'
+      - 'requirements-captions.txt'
+permissions:
+  contents: read
+jobs:
+  english-cpu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg espeak-ng
+      - run: python -m pip install -r requirements-captions.txt
+      - name: Transcribe synthetic speech and decode the subtitled clip
+        run: |
+          espeak-ng -s 145 -w speech.wav "Wait for the jump. I landed on the roof. That was so close."
+          ffmpeg -v error -f lavfi -i color=navy:s=320x180:r=12 -i speech.wav -shortest -c:v libx264 -c:a aac speech.mp4
+          python -m clutchsift speech.mp4 --count 1 --seconds 30 --captions --asr-device cpu --asr-model tiny.en --caption-style karaoke --burn --output result
+          grep -q -- '-->' result/run-001/clip_01.srt
+          grep -Fq '{\kf' result/run-001/clip_01.ass
+          ffmpeg -v error -xerror -i result/run-001/clip_01_captioned.mp4 -f null -

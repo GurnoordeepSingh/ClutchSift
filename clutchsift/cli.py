@@ -5,11 +5,18 @@ import argparse
 import json
 from pathlib import Path
 
-from .core import burn_subtitles, create_run_folder, export_clip, find_highlights, pretty_time, write_manifest
+from .core import ClutchSiftError, burn_subtitles, create_run_folder, export_clip, find_highlights, pretty_time, write_manifest
 from .hybrid import find_hybrid_highlights
 
 
 def main(argv=None) -> None:
+    try:
+        run(argv)
+    except (ClutchSiftError, OSError) as exc:
+        raise SystemExit(f"ClutchSift: {exc}") from None
+
+
+def run(argv=None) -> None:
     parser = argparse.ArgumentParser(description="ClutchSift: local gaming clip candidates")
     parser.add_argument("video", type=Path, help="Local recording; only use footage you may edit")
     parser.add_argument("--count", type=int, default=5, help="Candidates (1–30)")
