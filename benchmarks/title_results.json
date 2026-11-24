@@ -1,0 +1,169 @@
+{
+  "started_utc": "2026-11-24T10:27:59.369237+00:00",
+  "ollama": "0.34.4",
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_predict": 48,
+    "num_ctx": 1024
+  },
+  "prompt_template": "Write one short English title for this gameplay clip. Use at most 60 characters. Return only the title as a single plain-text line. Ground every claim in the transcript. Do not invent an outcome, add hashtags, or quote the title.\nGame: {game}\nTranscript: {transcript}",
+  "cases": {
+    "gta_bike": [
+      "GTA",
+      "I missed the ramp. The bike fell into the canal. I'm swimming back to shore."
+    ],
+    "roblox_obby": [
+      "Roblox",
+      "Wait for the blue platform. Now jump! I made the checkpoint with one second left."
+    ],
+    "unresolved": [
+      "Racing game",
+      "Final turn. We're side by side. The recording cuts off before the finish."
+    ],
+    "correction": [
+      "Roblox",
+      "I thought the vault was open. Nope, still locked. We went back for the key."
+    ]
+  },
+  "models": {
+    "qwen2.5:7b": {
+      "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "qwen2",
+        "families": [
+          "qwen2"
+        ],
+        "parameter_size": "7.6B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 32768,
+        "embedding_length": 3584
+      },
+      "size": 4683087332
+    },
+    "gemma2:9b": {
+      "digest": "ff02c3702f322b9e075e9568332d96c0a7028002f1a5a056e0a6784320a4db0b",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "gemma2",
+        "families": [
+          "gemma2"
+        ],
+        "parameter_size": "9.2B",
+        "quantization_level": "Q4_0",
+        "context_length": 8192,
+        "embedding_length": 3584
+      },
+      "size": 5443152417
+    }
+  },
+  "runs": [
+    {
+      "case": "gta_bike",
+      "model": "qwen2.5:7b",
+      "title": "Bike Crash into Canal",
+      "single_line": true,
+      "char_count": 21,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 57.709,
+      "load_seconds": 32.299,
+      "output_tokens": 6,
+      "done_reason": "stop"
+    },
+    {
+      "case": "roblox_obby",
+      "model": "qwen2.5:7b",
+      "title": "Blue Platform Race Success",
+      "single_line": true,
+      "char_count": 26,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 0.15,
+      "load_seconds": 0.008,
+      "output_tokens": 5,
+      "done_reason": "stop"
+    },
+    {
+      "case": "unresolved",
+      "model": "qwen2.5:7b",
+      "title": "Final Turn Side-by-Side",
+      "single_line": true,
+      "char_count": 23,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 0.174,
+      "load_seconds": 0.006,
+      "output_tokens": 7,
+      "done_reason": "stop"
+    },
+    {
+      "case": "correction",
+      "model": "qwen2.5:7b",
+      "title": "Vault Locked: Retrieval Mission",
+      "single_line": true,
+      "char_count": 31,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 0.158,
+      "load_seconds": 0.004,
+      "output_tokens": 7,
+      "done_reason": "stop"
+    },
+    {
+      "case": "gta_bike",
+      "model": "gemma2:9b",
+      "title": "GTA Bike Crash and Swim",
+      "single_line": true,
+      "char_count": 23,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 50.418,
+      "load_seconds": 34.54,
+      "output_tokens": 8,
+      "done_reason": "stop"
+    },
+    {
+      "case": "roblox_obby",
+      "model": "gemma2:9b",
+      "title": "Roblox: Narrow Escape at Checkpoint",
+      "single_line": true,
+      "char_count": 35,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 0.31,
+      "load_seconds": 0.009,
+      "output_tokens": 9,
+      "done_reason": "stop"
+    },
+    {
+      "case": "unresolved",
+      "model": "gemma2:9b",
+      "title": "Neck and Neck to the Finish",
+      "single_line": true,
+      "char_count": 27,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 0.305,
+      "load_seconds": 0.005,
+      "output_tokens": 9,
+      "done_reason": "stop"
+    },
+    {
+      "case": "correction",
+      "model": "gemma2:9b",
+      "title": "Vault Remains Locked, Key Needed",
+      "single_line": true,
+      "char_count": 32,
+      "no_hashtag": true,
+      "no_wrapping_quotes": true,
+      "wall_seconds": 0.304,
+      "load_seconds": 0.006,
+      "output_tokens": 9,
+      "done_reason": "stop"
+    }
+  ]
+}

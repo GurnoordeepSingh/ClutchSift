@@ -18,11 +18,16 @@ jobs:
       - name: Install FFmpeg (Ubuntu)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - name: Check FFmpeg (Windows; integration tests skip when unavailable)
+      - name: Install FFmpeg when missing (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          if (Get-Command ffmpeg -ErrorAction SilentlyContinue) { ffmpeg -version | Select-Object -First 1 }
-          else { Write-Host 'FFmpeg absent, FFmpeg-specific tests will skip' }
+          if (!(Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg -y --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          Get-Command ffmpeg, ffprobe -ErrorAction Stop
       - name: Run unit and FFmpeg smoke tests
         run: python -m unittest discover -s tests -v
+      - name: Validate portrait renders and silent input
+        run: python benchmarks/media_check.py

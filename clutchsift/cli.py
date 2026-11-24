@@ -5,7 +5,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .core import ClutchSiftError, burn_subtitles, export_clip, find_highlights, pretty_time, write_manifest
+from .core import burn_subtitles, create_run_folder, export_clip, find_highlights, pretty_time, write_manifest
 from .hybrid import find_hybrid_highlights
 
 
@@ -42,19 +42,20 @@ def main(argv=None) -> None:
         duration, clips = find_hybrid_highlights(args.video, args.seconds, args.count)
     else:
         duration, clips = find_highlights(args.video, args.seconds, args.count)
-    args.output.mkdir(parents=True, exist_ok=True)
-    manifest = write_manifest(args.video.resolve(), clips, args.output)
+    output = create_run_folder(args.output)
+    print("Run folder:", output.resolve())
+    manifest = write_manifest(args.video.resolve(), clips, output)
     if args.vision_review:
         from .vision import review_candidate, save_reviews
         reviews = [review_candidate(args.video, item, model=args.ollama_model) for item in clips]
-        report = save_reviews(reviews, args.output / "vision_reviews.json")
+        report = save_reviews(reviews, output / "vision_reviews.json")
         print("Vision observations (verify before believing):", report.resolve())
     print(f"Recording: {pretty_time(duration)} | Mode: {args.mode} | Candidates: {len(clips)}")
     for i, item in enumerate(clips, 1):
         print(f"{i:02}: {pretty_time(item.start)}–{pretty_time(item.end)} [{item.method}]")
         if args.scan_only:
             continue
-        clip = args.output / f"clip_{i:02}.mp4"
+        clip = output / f"clip_{i:02}.mp4"
         export_clip(args.video, clip, item.start, item.end, vertical=not args.landscape,
                     duration=duration, layout=args.layout, encoder=args.encoder)
         text = ""
