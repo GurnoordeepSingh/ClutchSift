@@ -39,7 +39,7 @@ The default scan finds changes in audio and motion. Choose **Local AI vision** t
 
 ### Find clips with a local vision model
 
-Install [Ollama](https://ollama.com/download) and run `ollama pull qwen3-vl:4b` once (about 3.3 GB). Start Ollama. In the editor choose **Local AI vision**, enter an optional **AI focus** such as “a vehicle landing after a jump”, and click **Find moments**. Select a suggestion to read the model's visual evidence, then trim and export as usual.
+Install [Ollama](https://ollama.com/download) and run `ollama pull qwen3-vl:4b-instruct` once (about 3.3 GB). Start Ollama. In the editor choose **Local AI vision**, enter an optional **AI focus** such as “a vehicle landing after a jump”, and click **Find moments**. Select a suggestion to read the model's visual evidence, then trim and export as usual.
 
 ```powershell
 py -3 -m clutchsift gameplay.mp4 --mode ai --focus "a vehicle landing after a jump" --count 5 --seconds 30

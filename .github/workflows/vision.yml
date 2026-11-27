@@ -24,7 +24,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Load the same vision model offered by the editor
         run: |
-          curl -sS --retry 3 --fail-with-body --output pull.json http://localhost:11434/api/pull -d '{"model":"qwen3-vl:4b","stream":false}' || { cat pull.json; exit 1; }
+          curl -sS --retry 3 --fail-with-body --output pull.json http://localhost:11434/api/pull -d '{"model":"qwen3-vl:4b-instruct","stream":false}' || { cat pull.json; exit 1; }
           python -c "import json; assert json.load(open('pull.json'))['status']=='success'"
       - name: Find a requested shape and export the selected window
         run: |

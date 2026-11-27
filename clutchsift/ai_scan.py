@@ -11,7 +11,7 @@ from urllib.request import Request, urlopen
 from .core import ClutchSiftError, Highlight, evenly_spaced_candidates, find_tool
 from .hybrid import find_hybrid_highlights
 
-MODEL = "qwen3-vl:4b"
+MODEL = "qwen3-vl:4b-instruct"
 DEFAULT_FOCUS = "A clear gameplay setup followed by a surprising or decisive visible change."
 SCHEMA = {
     "type": "object",
