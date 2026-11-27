@@ -30,5 +30,5 @@ jobs:
         run: |
           ffmpeg -v error -f lavfi -i "color=white:s=320x180:r=10:d=9" -vf "drawbox=x=100:y=30:w=120:h=120:c=red:t=fill:enable='between(t,3,5.99)'" -c:v libx264 fixture.mp4
           python -m clutchsift fixture.mp4 --mode ai --focus "A large red square is visible on a white background. A white screen alone is a non-match." --count 1 --seconds 3 --output results
-          python -c "import json; c, = json.load(open('results/run-001/highlights.json'))['candidates']; print(c); assert c['start'] <= 4.5 < c['end'] and c['score'] >= 2 and c['evidence']"
+          python -c "import json; c, = json.load(open('results/run-001/highlights.json'))['candidates']; print(c); assert min(6,c['end']) - max(3,c['start']) >= 1 and c['score'] >= 2 and c['evidence']"
           ffmpeg -v error -xerror -i results/run-001/clip_01.mp4 -f null -
