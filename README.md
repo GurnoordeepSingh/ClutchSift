@@ -30,6 +30,18 @@
 
 ## Quick start (Windows)
 
+### Find clips with a local vision model
+
+Install [Ollama](https://ollama.com/download) and run `ollama pull qwen3-vl:4b` once (about 3.3 GB). Start Ollama. In the editor choose **Local AI vision**, enter an optional **AI focus** such as “a vehicle landing after a jump”, and click **Find moments**. Select a suggestion to read the model's visual evidence, then trim and export as usual.
+
+```powershell
+py -3 -m clutchsift gameplay.mp4 --mode ai --focus "a vehicle landing after a jump" --count 5 --seconds 30
+```
+
+The audio and motion scan covers the recording. The vision model compares four ordered stills per proposed window, including samples spaced across the timeline. It can miss short events and speech-only moments. Scores of 2–4 qualify for review, duplicate windows are suppressed, and the result can be empty. Scores express visual match to the request. Use `--scan-only` to save selections, scores and evidence without rendering. See the [competitor research and evaluation plan](docs/COMPETITOR_ANALYSIS.md).
+
+### Launch the editor
+
 1. Install **Python 3.11 or 3.12** from https://python.org. (3.13 is fine for the stdlib core; optional GPU packages may have narrower support.)
 2. Install **FFmpeg** (including `ffmpeg` and `ffprobe`) from https://ffmpeg.org/download.html or Windows PowerShell: `winget install Gyan.FFmpeg`. Open a fresh terminal after installing.
 3. Download/unzip this repository, then double-click **`run_windows.bat`** in the extracted `ClutchSift` folder. Or run in PowerShell from the repository root:

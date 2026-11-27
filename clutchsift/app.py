@@ -14,6 +14,7 @@ from .core import (
     pretty_time, create_run_folder, validate_segment, write_manifest,
 )
 from .hybrid import find_hybrid_highlights
+from .ai_scan import find_ai_highlights, VisionHighlight
 
 BG = "#0d1220"
 PANEL = "#171f31"
@@ -40,7 +41,8 @@ class ClutchSiftApp:
         self.encoder = tk.StringVar(value="cpu")
         self.captions = tk.BooleanVar(value=False)
         self.burn = tk.BooleanVar(value=False)
-        self.hybrid = tk.BooleanVar(value=True)
+        self.scan_mode = tk.StringVar(value="Audio + motion")
+        self.focus = tk.StringVar()
         self.karaoke = tk.BooleanVar(value=False)
         self.titles = tk.BooleanVar(value=False)
         self.asr_model = tk.StringVar(value="small")
@@ -123,9 +125,17 @@ class ClutchSiftApp:
 
         output = tk.Frame(outer, bg=PANEL, padx=16, pady=12)
         output.pack(fill="x", pady=(10, 6))
-        tk.Checkbutton(output, text="Hybrid scan (audio peaks + visual motion)", variable=self.hybrid,
-                       bg=PANEL, fg=FG, selectcolor=PANEL, activebackground=PANEL,
-                       activeforeground=FG, font=("Segoe UI", 10)).pack(anchor="w")
+        scan_row = tk.Frame(output, bg=PANEL)
+        scan_row.pack(fill="x")
+        self._label(scan_row, "Find moments using", bg=PANEL).pack(side="left")
+        mode = ttk.Combobox(scan_row, textvariable=self.scan_mode, state="readonly",
+                            values=("Audio + motion", "Audio only", "Local AI vision"), width=16)
+        mode.pack(side="left", padx=6)
+        self._label(scan_row, "AI focus", bg=PANEL).pack(side="left")
+        focus = ttk.Entry(scan_row, textvariable=self.focus, state="disabled")
+        focus.pack(side="left", fill="x", expand=True, padx=6)
+        mode.bind("<<ComboboxSelected>>", lambda _: focus.configure(
+            state="normal" if self.scan_mode.get() == "Local AI vision" else "disabled"))
         format_row = tk.Frame(output, bg=PANEL)
         format_row.pack(fill="x")
         tk.Checkbutton(format_row, text="Vertical 9:16", variable=self.vertical,
@@ -217,7 +227,14 @@ class ClutchSiftApp:
             messagebox.showerror("Invalid settings", "Clip length and number must be numeric.")
             return
         video = self.video
-        method = find_hybrid_highlights if self.hybrid.get() else find_highlights
+        if self.scan_mode.get() == "Local AI vision":
+            focus = self.focus.get()
+            def progress(note):
+                self.root.after(0, self.status.set, note)
+            self._run_background(lambda: find_ai_highlights(video, length, count, focus=focus,
+                                 progress=progress), self._show_results, "Preparing local AI scan…")
+            return
+        method = find_hybrid_highlights if self.scan_mode.get() == "Audio + motion" else find_highlights
         self._run_background(lambda: method(video, length, count), self._show_results,
                              "Scanning audio and/or motion... Long recordings can take a while.")
 
@@ -234,6 +251,8 @@ class ClutchSiftApp:
         for i, clip in enumerate(self.highlights):
             activity = f"+{clip.jump_db:.1f} dB" if "audio" in clip.method else "N/A"
             label = clip.method
+            if isinstance(clip, VisionHighlight):
+                label = f"AI match {clip.score}/4"
             self.tree.insert("", "end", iid=str(i), values=(i + 1, pretty_time(clip.start), pretty_time(clip.end), activity, label))
         for iid in selection:
             if self.tree.exists(iid):
@@ -246,6 +265,8 @@ class ClutchSiftApp:
         clip = self.highlights[int(selected[0])]
         self.start_edit.set(f"{clip.start:.2f}")
         self.end_edit.set(f"{clip.end:.2f}")
+        if isinstance(clip, VisionHighlight):
+            self.status.set(clip.evidence)
 
     def _range(self) -> tuple[float, float]:
         try:

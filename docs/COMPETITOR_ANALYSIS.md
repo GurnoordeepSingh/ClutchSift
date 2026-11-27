@@ -1,0 +1,28 @@
+# How comparable clippers select and frame a moment
+
+Reviewed 28 November 2026. The comparison covers direct gaming competitors, a general short-form editor and public implementations with inspectable techniques. Selection reflects relevance to editing a saved gameplay recording. Vendor feature descriptions establish advertised behavior. They provide no comparable precision or runtime benchmark on our footage.
+
+| Product or project | What the publisher documents | Implication for ClutchSift |
+| --- | --- | --- |
+| [Eklipse](https://eklipse.gg/) | Game-specific highlight workflows, voice commands, editable vertical output and per-game clip settings. | A GTA chase and a Roblox obstacle-course finish need different selection criteria. Ask the creator what to find. The linked page does not identify the production model weights. |
+| [OpusClip ClipAnything](https://www.opus.pro/clipanything) | Describes combining imagery, audio and sentiment with user prompts. Its reframing product follows subjects and actions. | Make the request affect the actual shortlist. Separate selection quality from crop quality in evaluation. The product description does not specify model checkpoints, frame rate, or local GPU requirements. |
+| [Medal](https://medal.tv/auto-clipping) | Game events or replay data can trigger bookmarks during capture. On FiveM, the server determines available events. | For imported recordings those signals may be gone. A visible HUD cue can support a suggestion, but exact event labels need evidence. An optional event timestamp import is a separate integration. |
+| [gaming-clip](https://github.com/iyansr/gaming-clip) | Uses whisper.cpp, heuristic or LLM-assisted selection and YuNet plus static border detection to find a webcam overlay. Its CLI and review interface share a project. | Preserve the reason for a pick across review and export. Webcam detection solves a different task from tracking an avatar through a scene. |
+| [AutoClip](https://github.com/artbyjazi/autoclip) | Offers local Whisper and Ollama, MediaPipe-based reframing and manual review. Its maintainers describe a fixed-footage evaluation as a release milestone. | A local pipeline is practical. Compare crops on the same difficult shots before adopting an automatic default. |
+| [Clips AI](https://github.com/ClipsAI/clipsai) | WhisperX gives word boundaries. Transcripts drive clip selection for speech-centric recordings. Pyannote helps identify speakers for reframing. | Strong candidate for commentary or role-play. Silent driving and platforming still need visual evidence. |
+| [Auto-Clipper](https://github.com/bendawg2010/Auto-clipper) | Describes game profiles with YOLO detections in Arc Raiders, pixel cues in War Thunder and spoken triggers. | A narrow detector can add game-specific evidence. Test HUD layouts, resolutions and game versions before generalizing a profile. |
+| [Google AutoFlip](https://research.google/blog/autoflip-an-open-source-framework-for-intelligent-video-reframing/) | Combines shot boundaries, salient regions and camera-path optimization for reframing. | A character location is just one input. Stabilize the camera path and re-acquire the subject on cuts. Keep a wide fallback if the landing zone and avatar cannot both fit. |
+
+## Decision for this release
+
+The existing optional frame reviewer described clips after they were picked. The new AI scan uses visual evidence to decide which proposals actually survive. It mixes activity peaks with uniform samples, then runs one local model request per window. The requested clip duration controls how much context each draft retains. Four ordered stills can show a visible transition and can miss a fast event between samples. A low rating can remove a window entirely, so creators may receive fewer clips than requested.
+
+The first candidate is Qwen3-VL 4B. Ollama lists the quantized build at 3.3 GB, including a vision projector, under Apache 2.0. Installed runtime memory also depends on context and image processing. ClutchSift sends one four-panel image per request and validates the returned score and explanation. This implementation uses original code and calls the separately installed local runtime. No competitor source, model weights, or binaries are included. [Model package and license](https://ollama.com/library/qwen3-vl:4b) · [Ollama structured outputs](https://docs.ollama.com/capabilities/structured-outputs) · [Apache distribution terms](https://www.apache.org/licenses/LICENSE-2.0)
+
+## How to decide the next investment
+
+1. Before running the detector, have creators mark the setup, payoff and reaction on permitted GTA driving, Roblox gameplay and spoken role-play footage. Include quiet successes, static menus, cuts and ambiguous failures.
+2. Run hybrid and AI scans with the same clip count and duration. Shuffle anonymized exports. Count distinct usable clips in the first five, total marked moments recovered, missed quiet events and seconds of manual trim. Count absent suggestions as empty slots when comparing precision at five.
+3. For each missed moment, check whether the proposal stage ever included it. Missing proposals call for better timeline coverage or transcript cues. Rejected good proposals call for better evidence, sampling density or ranking.
+4. Time a three-hour source on the target 8 GB laptop, recording scan time, model time, peak memory and failures separately. A smoke test establishes integration only.
+5. Next evaluate click-to-track portrait framing against center-crop and fit-blur. Include a subject leaving frame, a vehicle switch, a camera cut and a wide landing. Measure seconds of lost subject, missed payoff and creator corrections per clip.

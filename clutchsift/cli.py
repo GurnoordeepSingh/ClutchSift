@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .core import ClutchSiftError, burn_subtitles, create_run_folder, export_clip, find_highlights, pretty_time, write_manifest
 from .hybrid import find_hybrid_highlights
+from .ai_scan import MODEL, find_ai_highlights
 
 
 def main(argv=None) -> None:
@@ -22,7 +23,7 @@ def run(argv=None) -> None:
     parser.add_argument("--count", type=int, default=5, help="Candidates (1–30)")
     parser.add_argument("--seconds", type=float, default=30, help="Clip length (3–180 seconds)")
     parser.add_argument("--output", type=Path, default=Path("ClutchSift_Exports"))
-    parser.add_argument("--mode", choices=["audio", "hybrid"], default="hybrid",
+    parser.add_argument("--mode", choices=["audio", "hybrid", "ai"], default="hybrid",
                         help="Hybrid combines audio peaks and visual-motion changes (heuristic)")
     parser.add_argument("--landscape", action="store_true", help="Keep original landscape layout")
     parser.add_argument("--layout", choices=["fit-blur", "center-crop"], default="fit-blur",
@@ -37,6 +38,8 @@ def run(argv=None) -> None:
     parser.add_argument("--burn", action="store_true", help="Burn captions into an additional MP4")
     parser.add_argument("--titles", action="store_true", help="Suggest titles using local Ollama (optional)")
     parser.add_argument("--ollama-model", default="qwen3.5:4b")
+    parser.add_argument("--focus", default="", help="Visible moment to look for in AI scan mode")
+    parser.add_argument("--vision-model", default=MODEL, help="Installed local Ollama model for AI scan")
     parser.add_argument("--vision-review", action="store_true",
                         help="Describe selected sparse frames with local Ollama vision; not game-event detection")
     parser.add_argument("--scan-only", action="store_true", help="Only scan and save JSON")
@@ -45,7 +48,12 @@ def run(argv=None) -> None:
         parser.error("--burn requires --captions")
     if args.scan_only and (args.captions or args.burn or args.titles):
         parser.error("--scan-only cannot create captions, titles, or exports")
-    if args.mode == "hybrid":
+    if args.focus and args.mode != "ai":
+        parser.error("--focus requires --mode ai")
+    if args.mode == "ai":
+        duration, clips = find_ai_highlights(args.video, args.seconds, args.count,
+                                             focus=args.focus, model=args.vision_model, progress=print)
+    elif args.mode == "hybrid":
         duration, clips = find_hybrid_highlights(args.video, args.seconds, args.count)
     else:
         duration, clips = find_highlights(args.video, args.seconds, args.count)
@@ -60,6 +68,8 @@ def run(argv=None) -> None:
     print(f"Recording: {pretty_time(duration)} | Mode: {args.mode} | Candidates: {len(clips)}")
     for i, item in enumerate(clips, 1):
         print(f"{i:02}: {pretty_time(item.start)}–{pretty_time(item.end)} [{item.method}]")
+        if args.mode == "ai":
+            print(f"  Match {item.score}/4: {item.evidence}")
         if args.scan_only:
             continue
         clip = output / f"clip_{i:02}.mp4"
