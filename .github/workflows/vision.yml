@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/vision.yml'
+      - 'clutchsift/ai_scan.py'
 permissions:
   contents: read
 jobs:

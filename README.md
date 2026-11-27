@@ -8,15 +8,16 @@
 
 [CI runs](https://github.com/GurnoordeepSingh/ClutchSift/actions/workflows/test.yml) · [Python 3.11+](#quick-start-windows) · [MIT license](LICENSE)
 
-> **Truthful capability note:** v0.2 uses **audio peaks and/or simple visual-motion changes**, not a trained GTA/Roblox kill detector. Motion, loud audio, and changes do not prove a clip is funny, exciting, or viral. This is a working prototype to validate real demand and collect permitted user feedback.
+The default scan finds changes in audio and motion. Choose **Local AI vision** to describe a visible event and let a local model rank potential clips. Review the suggestions before exporting. Accuracy on long GTA and Roblox sessions still needs creator testing.
 
-## What's included in v0.2
+## What you can do
 
 | Capability | Availability |
 | --- | --- |
 | Local MP4/MKV/MOV/WebM/AVI input | GUI and CLI. Preview and manual trim are available in the GUI. |
 | Audio-activity proposals with transparent labels | ✅ |
 | Audio + 1 FPS visual-motion proposals, fallback to sampling | ✅ Heuristic, new |
+| Find a requested visible event and read the evidence for each pick | GUI and CLI, optional local Qwen3-VL model |
 | 9:16 full-gameplay-in-blurred-background export | ✅ |
 | 9:16 center crop or original aspect ratio | GUI and CLI |
 | NVIDIA NVENC encoding on supported systems | GUI and CLI, opt-in |
@@ -30,6 +31,12 @@
 
 ## Quick start (Windows)
 
+### Launch the editor
+
+1. Install Python 3.11 or 3.12 and FFmpeg (including `ffprobe`). On Windows, the FFmpeg package is available with `winget install Gyan.FFmpeg`. Open a fresh terminal after installing. [Python downloads](https://www.python.org/downloads/) · [FFmpeg downloads](https://ffmpeg.org/download.html)
+2. Extract the repository and double-click **`run_windows.bat`**, or run `py -3 -m clutchsift` from the project folder.
+3. Select a recording, click **Find moments**, preview and trim a suggestion, then export. The default audio and motion scan uses Python's standard library, Tkinter and FFmpeg.
+
 ### Find clips with a local vision model
 
 Install [Ollama](https://ollama.com/download) and run `ollama pull qwen3-vl:4b` once (about 3.3 GB). Start Ollama. In the editor choose **Local AI vision**, enter an optional **AI focus** such as “a vehicle landing after a jump”, and click **Find moments**. Select a suggestion to read the model's visual evidence, then trim and export as usual.
@@ -39,20 +46,6 @@ py -3 -m clutchsift gameplay.mp4 --mode ai --focus "a vehicle landing after a ju
 ```
 
 The audio and motion scan covers the recording. The vision model compares four ordered stills per proposed window, including samples spaced across the timeline. It can miss short events and speech-only moments. Scores of 2–4 qualify for review, duplicate windows are suppressed, and the result can be empty. Scores express visual match to the request. Use `--scan-only` to save selections, scores and evidence without rendering. See the [competitor research and evaluation plan](docs/COMPETITOR_ANALYSIS.md).
-
-### Launch the editor
-
-1. Install **Python 3.11 or 3.12** from https://python.org. (3.13 is fine for the stdlib core; optional GPU packages may have narrower support.)
-2. Install **FFmpeg** (including `ffmpeg` and `ffprobe`) from https://ffmpeg.org/download.html or Windows PowerShell: `winget install Gyan.FFmpeg`. Open a fresh terminal after installing.
-3. Download/unzip this repository, then double-click **`run_windows.bat`** in the extracted `ClutchSift` folder. Or run in PowerShell from the repository root:
-
-   ```powershell
-   py -3 -m clutchsift
-   ```
-
-4. Select a recording → Find moments → select and preview candidates → edit trim → export clips.
-
-**No Python packages are needed for the core editor and audio+motion proposal engine.** It uses Python's standard library, native Tkinter, and your separately installed FFmpeg.
 
 ### Optional: captions
 
@@ -110,7 +103,9 @@ Recording you own / are allowed to edit
   ├─ FFprobe validates media
   ├─ FFmpeg decodes 4 kHz mono audio → 1-second loudness changes
   ├─ FFmpeg decodes 64x36 grayscale at 1 FPS → frame-change estimates
-  └─ Hybrid scoring, nonoverlap suppression → editable candidate ranges
+  └─ Hybrid scoring → candidate ranges
+                      ↓ (AI mode)
+         Add spaced samples → review four stills per window → rank and remove overlaps
                       ↓
                Human reviews clips
                       ↓
@@ -121,7 +116,7 @@ Recording you own / are allowed to edit
          Ollama localhost → suggested metadata JSON / sparse-frame visual observations
 ```
 
-Every candidate has a detector `method` in `highlights.json`: `audio`, `motion`, `audio+motion` or `sampling`. **Sampling is not an AI-detected highlight.** Motion responds to camera motion, so it will often surface ordinary footage; visual game event detection is future work.
+The manifest records how each clip was found. AI selections also include the original proposal method, creator request, model, match score and a short explanation. The general vision model can mistake routine movement for the requested event.
 
 ### Safety and data handling
 
